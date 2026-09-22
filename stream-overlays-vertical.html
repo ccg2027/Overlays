@@ -149,13 +149,37 @@
 
 <script>
   function scale(){
-    var s=Math.min(window.innerWidth/1080,window.innerHeight/1920);
-    document.body.style.transform='scale('+s+')';
-    document.body.style.transformOrigin='top left';
-    document.body.style.width='1080px';
-    document.body.style.height='1920px';
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var b = document.body;
+    b.style.width  = '1080px';
+    b.style.height = '1920px';
+    b.style.position = 'absolute';
+    b.style.top = '0';
+    b.style.left = '0';
+
+    // The overlay is built tall (1080x1920). If CameraFi hands us a WIDE
+    // frame (wider than it is tall), it's rendering us sideways — so we
+    // rotate the whole overlay 90 degrees to stand it back upright and
+    // scale it to fill that wide frame. If the frame is already tall,
+    // we just scale normally with no rotation.
+    if (vw > vh) {
+      // Sideways frame: rotate upright. After rotating, the overlay's
+      // 1080 width maps to the frame's height, 1920 height maps to width.
+      var s = Math.min(vw/1920, vh/1080);
+      // rotate 90deg clockwise around top-left, then shift into view
+      b.style.transformOrigin = 'top left';
+      b.style.transform = 'translateX(' + vw + 'px) rotate(90deg) scale(' + s + ')';
+    } else {
+      // Upright frame: normal scaling, no rotation.
+      var s2 = Math.min(vw/1080, vh/1920);
+      b.style.transformOrigin = 'top left';
+      b.style.transform = 'scale(' + s2 + ')';
+    }
   }
-  scale(); window.addEventListener('resize',scale);
+  scale();
+  window.addEventListener('resize', scale);
+  window.addEventListener('orientationchange', function(){ setTimeout(scale, 100); });
 
   var lat=null,lon=null,isMoving=false;
   var lastTemp=0,lastGeo=0,lastTz=0;
